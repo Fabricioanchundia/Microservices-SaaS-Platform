@@ -1,23 +1,34 @@
-import { Injectable, BadGatewayException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 
 @Injectable()
 export class OrdersProxyService {
-  private baseUrl = process.env.ORDERS_SERVICE_URL;
+  private readonly ordersServiceUrl = process.env.ORDERS_SERVICE_URL;
 
-  async forward(method: string, path: string, body?: any, headers?: any) {
+  async forward(
+    method: string,
+    path: string,
+    body?: any,
+    headers?: Record<string, string>,
+  ) {
     try {
-      const url = `${this.baseUrl}${path}`;
-      const res = await axios.request({
+      // 🔥 ESTA LÍNEA ES LA CLAVE (NO CAMBIAR)
+      const url = `${this.ordersServiceUrl}/orders${path}`;
+
+      const response = await axios({
         method,
         url,
         data: body,
         headers,
       });
-      return res.data;
-    } catch (err: any) {
-      throw new BadGatewayException(
-        err?.response?.data || 'Orders service unavailable',
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Orders service error:', error?.response?.data || error.message);
+
+      throw new HttpException(
+        error?.response?.data || 'Orders service unavailable',
+        error?.response?.status || HttpStatus.BAD_GATEWAY,
       );
     }
   }

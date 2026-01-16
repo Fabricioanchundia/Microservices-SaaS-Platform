@@ -13,7 +13,7 @@ export class OrdersProxyController {
 
   @Get()
   list(@CurrentUser() user: any) {
-    return this.ordersProxy.forward('GET', '/orders', null, {
+    return this.ordersProxy.forward('GET', '', null, {
       'x-user-id': user.sub,
       'x-user-role': user.role,
       'x-user-email': user.email,
@@ -22,7 +22,7 @@ export class OrdersProxyController {
 
   @Get(':id')
   get(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.ordersProxy.forward('GET', `/orders/${id}`, null, {
+    return this.ordersProxy.forward('GET', `/${id}`, null, {
       'x-user-id': user.sub,
       'x-user-role': user.role,
       'x-user-email': user.email,
@@ -31,7 +31,7 @@ export class OrdersProxyController {
 
   @Post()
   create(@Body() body: any, @CurrentUser() user: any) {
-    return this.ordersProxy.forward('POST', '/orders', body, {
+    return this.ordersProxy.forward('POST', '', body, {
       'x-user-id': user.sub,
       'x-user-role': user.role,
       'x-user-email': user.email,
@@ -40,7 +40,7 @@ export class OrdersProxyController {
 
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() body: any, @CurrentUser() user: any) {
-    return this.ordersProxy.forward('PATCH', `/orders/${id}/status`, body, {
+    return this.ordersProxy.forward('PATCH', `/${id}/status`, body, {
       'x-user-id': user.sub,
       'x-user-role': user.role,
       'x-user-email': user.email,
