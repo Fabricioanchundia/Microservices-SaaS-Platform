@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { OrdersController } from './orders-service/orders.controller';
-import { OrdersService } from './orders-service/orders.service';
-import { Order } from './orders-service/entidad/order.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { OrdersModule } from './orders/orders.module';
+import { Order } from './orders/entidad/order.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -16,11 +16,10 @@ import { Order } from './orders-service/entidad/order.entity';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [Order],
-      synchronize: true, // ⚠️ solo dev
+      synchronize: String(process.env.DB_SYNC) === 'true', // para dev
     }),
-    TypeOrmModule.forFeature([Order]),
+
+    OrdersModule,
   ],
-  controllers: [OrdersController],
-  providers: [OrdersService],
 })
 export class AppModule {}

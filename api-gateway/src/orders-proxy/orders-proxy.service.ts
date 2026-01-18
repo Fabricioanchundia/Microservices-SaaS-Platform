@@ -1,5 +1,5 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable, HttpException } from '@nestjs/common';
+import axios, { AxiosError } from 'axios';
 
 @Injectable()
 export class OrdersProxyService {
@@ -12,7 +12,6 @@ export class OrdersProxyService {
     headers?: Record<string, string>,
   ) {
     try {
-      // 🔥 ESTA LÍNEA ES LA CLAVE (NO CAMBIAR)
       const url = `${this.ordersServiceUrl}/orders${path}`;
 
       const response = await axios({
@@ -23,12 +22,21 @@ export class OrdersProxyService {
       });
 
       return response.data;
-    } catch (error: any) {
-      console.error('❌ Orders service error:', error?.response?.data || error.message);
+    } catch (error) {
+      const err = error as AxiosError<any>;
 
+      // 🔥 CLAVE: reenviar el error REAL del microservicio
+      if (err.response) {
+        throw new HttpException(
+          err.response.data || err.message,
+          err.response.status,
+        );
+      }
+
+      // Error de red / servicio caído
       throw new HttpException(
-        error?.response?.data || 'Orders service unavailable',
-        error?.response?.status || HttpStatus.BAD_GATEWAY,
+        'Orders service unavailable',
+        502,
       );
     }
   }
