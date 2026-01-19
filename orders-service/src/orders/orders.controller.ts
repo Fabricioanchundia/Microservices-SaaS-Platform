@@ -45,13 +45,14 @@ export class OrdersController {
   }
 
   // 🔥 SOLO ADMIN
-  @Patch(':id/status')
-  updateStatus(
-    @Headers('x-user-id') userId: string,
-    @Headers('x-user-role') role: string,
-    @Param('id') id: string,
-    @Body() dto: UpdateStatusDto,
-  ) {
-    return this.ordersService.updateStatus(userId, role, id, dto);
-  }
+@Patch(':id/status')
+updateStatus(
+  @Headers('x-user-id') userId: string,
+  @Headers('x-user-role') role: string,
+  @Param('id') id: string,
+  @Body() dto: UpdateStatusDto,
+) {
+  return this.ordersService.updateStatus(userId, role, id, dto);
+}
+
 }
