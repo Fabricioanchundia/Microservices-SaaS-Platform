@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
@@ -15,26 +14,25 @@ import { UpdateStatusDto } from './dto/update-status.dto';
 import { InternalGuard } from '../common/guards/internal.guard';
 
 @Controller('orders')
-@UseGuards(InternalGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  @Get('admin/all')
+  @UseGuards(InternalGuard)
+  findAllAdmin() {
+    return this.ordersService.findAll();
+  }
 
   @Post()
   create(
     @Headers('x-user-id') userId: string,
     @Body() dto: CreateOrderDto,
   ) {
-    if (!userId) {
-      throw new BadRequestException('x-user-id header is required');
-    }
     return this.ordersService.create(userId, dto);
   }
 
   @Get()
   findAll(@Headers('x-user-id') userId: string) {
-    if (!userId) {
-      throw new BadRequestException('x-user-id header is required');
-    }
     return this.ordersService.findAllByUser(userId);
   }
 
@@ -43,21 +41,17 @@ export class OrdersController {
     @Headers('x-user-id') userId: string,
     @Param('id') id: string,
   ) {
-    if (!userId) {
-      throw new BadRequestException('x-user-id header is required');
-    }
     return this.ordersService.findOneByUser(userId, id);
   }
 
+  // 🔥 SOLO ADMIN
   @Patch(':id/status')
   updateStatus(
     @Headers('x-user-id') userId: string,
+    @Headers('x-user-role') role: string,
     @Param('id') id: string,
     @Body() dto: UpdateStatusDto,
   ) {
-    if (!userId) {
-      throw new BadRequestException('x-user-id header is required');
-    }
-    return this.ordersService.updateStatus(userId, id, dto);
+    return this.ordersService.updateStatus(userId, role, id, dto);
   }
 }

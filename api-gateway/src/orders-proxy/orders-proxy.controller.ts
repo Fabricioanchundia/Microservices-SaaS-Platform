@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   InternalServerErrorException,
   Param,
@@ -20,79 +21,61 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class OrdersProxyController {
   constructor(private readonly ordersProxy: OrdersProxyService) {}
 
-  // =========================
-  // CREATE ORDER (POST)
-  // =========================
+  private getInternalApiKey(): string {
+    const key = process.env.INTERNAL_API_KEY;
+    if (!key) {
+      throw new InternalServerErrorException('INTERNAL_API_KEY is not set');
+    }
+    return key;
+  }
+
   @Post()
   create(@Body() body: any, @CurrentUser() user: any) {
-    const internalApiKey = process.env.INTERNAL_API_KEY;
-    if (!internalApiKey) {
-      throw new InternalServerErrorException(
-        'INTERNAL_API_KEY is not configured',
-      );
-    }
-
     return this.ordersProxy.forward('POST', '/', body, {
       'x-user-id': user.sub,
-      'x-internal-key': internalApiKey,
+      'x-user-email': user.email,
+      'x-user-role': user.role,
+      'x-internal-key': this.getInternalApiKey(),
     });
   }
 
-  // =========================
-  // LIST ORDERS (GET)
-  // =========================
+  // ✅ ADMIN
+  @Get('admin/all')
+  listAllAdmin(@CurrentUser() user: any) {
+    if (user.role !== 'admin') {
+      throw new ForbiddenException('Admin only');
+    }
+
+    return this.ordersProxy.forward('GET', '/admin/all', null, {
+      'x-internal-key': this.getInternalApiKey(),
+    });
+  }
+
   @Get()
   list(@CurrentUser() user: any) {
-    const internalApiKey = process.env.INTERNAL_API_KEY;
-    if (!internalApiKey) {
-      throw new InternalServerErrorException(
-        'INTERNAL_API_KEY is not configured',
-      );
-    }
-
     return this.ordersProxy.forward('GET', '/', null, {
       'x-user-id': user.sub,
-      'x-internal-key': internalApiKey,
+      'x-internal-key': this.getInternalApiKey(),
     });
   }
 
-  // =========================
-  // GET ORDER BY ID
-  // =========================
   @Get(':id')
   getById(@Param('id') id: string, @CurrentUser() user: any) {
-    const internalApiKey = process.env.INTERNAL_API_KEY;
-    if (!internalApiKey) {
-      throw new InternalServerErrorException(
-        'INTERNAL_API_KEY is not configured',
-      );
-    }
-
     return this.ordersProxy.forward('GET', `/${id}`, null, {
       'x-user-id': user.sub,
-      'x-internal-key': internalApiKey,
+      'x-internal-key': this.getInternalApiKey(),
     });
   }
-
-  // =========================
-  // UPDATE STATUS
-  // =========================
   @Patch(':id/status')
   updateStatus(
-    @Param('id') id: string,
-    @Body() body: any,
-    @CurrentUser() user: any,
-  ) {
-    const internalApiKey = process.env.INTERNAL_API_KEY;
-    if (!internalApiKey) {
-      throw new InternalServerErrorException(
-        'INTERNAL_API_KEY is not configured',
-      );
-    }
-
-    return this.ordersProxy.forward('PATCH', `/${id}/status`, body, {
-      'x-user-id': user.sub,
-      'x-internal-key': internalApiKey,
+  @Param('id') id: string,
+  @Body() body: any,
+  @CurrentUser() user: any,
+) {
+  return this.ordersProxy.forward('PATCH', `/${id}/status`, body, {
+    'x-user-id': user.sub,
+    'x-user-role': user.role, // 🔥 ESTA LÍNEA ES CLAVE
+    'x-internal-key': this.getInternalApiKey(),
     });
   }
 }

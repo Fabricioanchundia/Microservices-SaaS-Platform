@@ -1,7 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import axios from 'axios';
 import { Order } from './entidad/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
@@ -20,49 +19,44 @@ export class OrdersService {
       price: dto.price,
       status: 'CREATED',
     });
-
-    const savedOrder = await this.ordersRepo.save(order);
-
-    try {
-      await axios.post(
-        `${process.env.NOTIFICATIONS_SERVICE_URL}/notifications/order-created`,
-        {
-          orderId: savedOrder.id,
-          userId,
-          product: savedOrder.product,
-          price: savedOrder.price,
-        },
-        {
-          headers: {
-            'x-internal-key': process.env.INTERNAL_API_KEY,
-          },
-        },
-      );
-    } catch (error) {
-      // Don't block order creation if notifications service is down
-      console.error('Failed to send order-created notification', error);
-    }
-
-    return savedOrder;
+    return this.ordersRepo.save(order);
   }
-
+  async findAll() {
+  return this.ordersRepo.find({
+    order: { createdAt: 'DESC' },
+  });
+}
   async findAllByUser(userId: string) {
     return this.ordersRepo.find({
       where: { userId },
       order: { createdAt: 'DESC' },
     });
   }
-  async findOneByUser(userId: string, id: string) {
-  const order = await this.ordersRepo.findOne({ where: { id, userId } });
 
-  if (!order) {
-    throw new NotFoundException('Order not found');
+  async findOneByUser(userId: string, id: string) {
+    const order = await this.ordersRepo.findOne({ where: { id, userId } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
   }
 
-  return order;
-}
-  async updateStatus(userId: string, id: string, dto: UpdateStatusDto) {
-    const order = await this.findOneByUser(userId, id);
+  // 🔐 CONTROL DE ROLES AQUÍ
+  async updateStatus(
+    userId: string,
+    role: string,
+    id: string,
+    dto: UpdateStatusDto,
+  ) {
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException('Only ADMIN can update order status');
+    }
+
+    const order = await this.ordersRepo.findOne({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
     order.status = dto.status;
     return this.ordersRepo.save(order);
   }
