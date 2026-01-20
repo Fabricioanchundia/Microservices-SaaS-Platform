@@ -1,107 +1,114 @@
-
 ---
 
 # 🚀 SaaS Orders Platform — Secure Microservices Backend
 
-Backend profesional basado en **arquitectura de microservicios**, con **JWT, roles, API Gateway y control de acceso interno**, diseñado para escenarios reales de **SaaS, e-commerce y plataformas empresariales**.
+A **production-ready backend** built with a **microservices architecture**, featuring **JWT authentication, role-based access control, an API Gateway, and secure internal communication**, designed for real-world **SaaS, e-commerce, and enterprise platforms**.
 
-Este proyecto demuestra **criterio arquitectónico**, **seguridad**, **separación de responsabilidades** y **buenas prácticas backend** usando **NestJS + PostgreSQL**.
+This project demonstrates **architectural thinking**, **security-first design**, **clear separation of concerns**, and **backend best practices** using **NestJS + PostgreSQL**.
 
 ---
 
-## 🧠 Arquitectura General
+## 🧠 System Architecture
 
 ```
 ┌──────────────┐
-│  API Gateway │  ← Validación JWT / Roles
+│  API Gateway │  ← JWT validation / Role checks
 └──────┬───────┘
-       │ Comunicación interna segura
+       │ Secure internal communication
        │ (x-internal-key)
 ┌──────▼────────┐      ┌──────────────────┐
 │ Auth Service  │      │ Orders Service   │
-│ JWT / Roles   │      │ Gestión pedidos  │
+│ JWT / Roles   │      │ Orders logic     │
 └───────────────┘      └──────────────────┘
 ```
 
-### Servicios
+### Services Overview
 
-* **API Gateway** → Punto único de entrada
-* **Auth Service** → Login, JWT, roles (`admin`, `user`)
-* **Orders Service** → Lógica de negocio de pedidos
+* **API Gateway** → Single entry point for all requests
+* **Auth Service** → Authentication, JWT issuance, role management (`admin`, `user`)
+* **Orders Service** → Core business logic for order management
 
 ---
 
-## 🔐 Seguridad Implementada
+## 🔐 Implemented Security
 
-* JWT firmado (HS256)
-* Roles embebidos en el token
-* Guards personalizados:
+* Signed JWT tokens (HS256)
+
+* Roles embedded directly in JWT payload
+
+* Custom guards:
 
   * `JwtAuthGuard`
   * `InternalGuard`
-* Comunicación entre microservicios protegida con:
+
+* Secure internal microservice communication via:
 
   ```
   x-internal-key
   ```
-* Separación clara entre:
 
-  * Acceso público
-  * Acceso autenticado
-  * Acceso administrativo
+* Clear separation between:
 
----
-
-## 👥 Roles del Sistema
-
-| Rol   | Permisos                              |
-| ----- | ------------------------------------- |
-| user  | Crear pedidos, ver sus pedidos        |
-| admin | Ver todos los pedidos, cambiar estado |
-
-Los roles se validan **tanto en el Gateway como en el microservicio**, evitando bypass de seguridad.
+  * Public access
+  * Authenticated access
+  * Administrative access
 
 ---
 
-## 📦 Funcionalidades Principales
+## 👥 System Roles
 
-### Usuario
+| Role  | Permissions                          |
+| ----- | ------------------------------------ |
+| user  | Create orders, view own orders       |
+| admin | View all orders, update order status |
 
-* Login con JWT
-* Crear pedidos
-* Listar sus pedidos
-* Ver detalle de pedido
-
-### Administrador
-
-* Listar todos los pedidos
-* Cambiar estado de pedido (`CREATED → PAID`)
-* Acceso protegido por rol + clave interna
+Roles are validated **both at the API Gateway and inside the microservice**, preventing security bypasses.
 
 ---
 
-## 🔁 Flujo de Actualización de Estado (ADMIN)
+## 📦 Core Features
 
-1. Admin se autentica → obtiene JWT
-2. Gateway valida JWT y rol
-3. Gateway reenvía request con headers internos:
+### User Capabilities
+
+* Login with JWT
+* Create orders
+* List personal orders
+* View order details
+
+### Admin Capabilities
+
+* List all orders
+* Update order status (`CREATED → PAID`)
+* Access protected by role + internal security key
+
+---
+
+## 🔁 Order Status Update Flow (ADMIN)
+
+1. Admin authenticates and receives a JWT
+
+2. API Gateway validates JWT and role
+
+3. Gateway forwards the request with internal headers:
 
    ```
    x-user-id
    x-user-role
    x-internal-key
    ```
-4. Orders Service valida:
 
-   * Clave interna
-   * Rol `admin`
-5. Se ejecuta el cambio de estado
+4. Orders Service validates:
 
-✔ Seguridad de doble capa
+   * Internal API key
+   * `admin` role
+
+5. Order status update is executed
+
+✔ **Double-layer security enforcement**
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Technology Stack
 
 * **Node.js**
 * **NestJS**
@@ -110,13 +117,13 @@ Los roles se validan **tanto en el Gateway como en el microservicio**, evitando 
 * **JWT**
 * **bcrypt**
 * **REST APIs**
-* **Arquitectura por microservicios**
+* **Microservices Architecture**
 
 ---
 
-## ⚙️ Variables de Entorno
+## ⚙️ Environment Variables
 
-Ejemplo `.env`:
+Example `.env` file:
 
 ```env
 DATABASE_URL=postgres://user:password@localhost:5432/orders_db
@@ -126,23 +133,23 @@ INTERNAL_API_KEY=internal_secure_key
 
 ---
 
-## ▶️ Cómo Ejecutar el Proyecto
+## ▶️ Running the Project
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Ejecutar cada servicio
+# Run each microservice
 npm run start:dev
 ```
 
-> Cada microservicio corre de forma independiente.
+> Each microservice runs independently.
 
 ---
 
-## 🧪 Endpoints Clave
+## 🧪 Key Endpoints
 
-### Auth
+### Auth Service
 
 ```
 POST /auth/login
@@ -165,31 +172,32 @@ PATCH /orders/:id/status
 
 ---
 
-## 📈 Enfoque Profesional
+## 📈 Professional Focus
 
-Este proyecto está diseñado para demostrar:
+This project is designed to demonstrate:
 
-* Pensamiento arquitectónico
-* Seguridad real (no simulada)
-* Control de acceso por roles
-* Escalabilidad
-* Código mantenible y extensible
+* Strong architectural decision-making
+* Real security implementation (not simulated)
+* Role-based access control
+* Scalability and maintainability
+* Clean, extensible backend code
 
-Es una base sólida para:
+It provides a solid foundation for:
 
-* SaaS
-* E-commerce
-* Sistemas empresariales
-* Plataformas multi-usuario
+* SaaS platforms
+* E-commerce systems
+* Enterprise backends
+* Multi-user applications
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Author
 
 **Fabricio Anchundia**
 Backend Developer
-NestJS · PostgreSQL · Microservices · JWT
 
-📩 *Disponible para oportunidades remotas y proyectos backend*
+**NestJS · PostgreSQL · Microservices · JWT**
 
+📩 *Open to remote backend opportunities and professional projects*
 ---
+
